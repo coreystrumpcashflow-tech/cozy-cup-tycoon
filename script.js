@@ -201,6 +201,26 @@ var popupQueue = [];
 var popupActive = false;
 
 // ============================================================
+// SCENE RUNTIME STATE — v1.2
+// ============================================================
+
+var MAX_SCENE_CUSTS   = 7;
+var sceneCustomers    = [];
+var sceneTablTaken    = [false, false, false, false];
+var scenePassiveTimer = null;
+
+// Anchor positions as left%, top% of scene container
+var SC_DOOR    = { l:  2, t: 44 };
+var SC_COUNTER = { l: 60, t: 10 };
+var SC_TABLES  = [
+  { l: 16, t: 36 },
+  { l: 36, t: 52 },
+  { l: 54, t: 32 },
+  { l: 25, t: 65 }
+];
+var SC_EXIT = { l: -9, t: 48 };
+
+// ============================================================
 // UTILITIES
 // ============================================================
 
@@ -333,6 +353,8 @@ function handleClick() {
 
   showCounterCustomer(ct, desc, earned, tip, isVIP);
   spawnCustomerCard(ct, desc, earned, tip, isVIP);
+  spawnSceneCustomer(ct, isVIP);
+  updateSceneOverlay(ct, earned, isVIP);
   showClickFloat(earned, tip > 0, combo);
   updateComboDisplay();
   checkRankEligibility();
@@ -523,6 +545,7 @@ function buyNextStore() {
   renderStaff();
   renderMenu();
   updateCounterLocation();
+  updateSceneLocation();
   updateDisplay();
   checkRankEligibility();
 
@@ -681,6 +704,201 @@ function closePopup() {
   document.getElementById('popup-overlay').classList.add('hidden');
   popupActive = false;
   setTimeout(flushPopupQueue, 250);
+}
+
+// ============================================================
+// CAFÉ SCENE — v1.2
+// ============================================================
+
+function scGetFreeTable() {
+  for (var i = 0; i < sceneTablTaken.length; i++) {
+    if (!sceneTablTaken[i]) return i;
+  }
+  return -1;
+}
+
+function spawnSceneCustomer(ct, isVIP) {
+  var container = document.getElementById('cs-customers');
+  if (!container) return;
+
+  if (sceneCustomers.length >= MAX_SCENE_CUSTS) {
+    var victim = null;
+    for (var i = 0; i < sceneCustomers.length; i++) {
+      var s = sceneCustomers[i].stage;
+      if (s === 'sitting' || s === 'leaving') { victim = sceneCustomers[i]; break; }
+    }
+    if (victim) removeSceneCust(victim);
+    else return;
+  }
+
+  var uid = 'sc' + (Date.now() % 100000) + Math.floor(Math.random() * 100);
+  var el = document.createElement('div');
+  el.className = 'scene-cust cust-entering';
+  el.id = uid;
+  var lbl = isVIP ? '\u2b50 VIP' : ct.type.split(' ')[0];
+  el.innerHTML = '<div class="sc-emoji">' + ct.emoji + '</div><div class="sc-label">' + lbl + '</div>';
+  el.style.left    = SC_DOOR.l + '%';
+  el.style.top     = SC_DOOR.t + '%';
+  el.style.opacity = '0';
+  container.appendChild(el);
+
+  var cust = { id: uid, el: el, ct: ct, stage: 'entering', tableIdx: -1, timer: null };
+  sceneCustomers.push(cust);
+
+  requestAnimationFrame(function() {
+    el.style.opacity = '1';
+    cust.timer = setTimeout(function() { scMoveToCounter(cust); }, 300);
+  });
+}
+
+function scMoveToCounter(cust) {
+  if (!cust.el || !cust.el.parentNode) return;
+  cust.stage = 'ordering';
+  cust.el.className = 'scene-cust cust-ordering';
+  cust.el.style.left = SC_COUNTER.l + '%';
+  cust.el.style.top  = SC_COUNTER.t + '%';
+  var wait = 1100 + Math.random() * 900;
+  cust.timer = setTimeout(function() { scAfterOrder(cust); }, wait);
+}
+
+function scAfterOrder(cust) {
+  if (!cust.el || !cust.el.parentNode) return;
+  var tIdx = scGetFreeTable();
+  if (tIdx >= 0 && Math.random() > 0.3) {
+    sceneTablTaken[tIdx] = true;
+    cust.tableIdx = tIdx;
+    cust.stage = 'sitting';
+    cust.el.className = 'scene-cust cust-sitting';
+    cust.el.style.left = SC_TABLES[tIdx].l + '%';
+    cust.el.style.top  = SC_TABLES[tIdx].t + '%';
+    var sitMs = 2800 + Math.random() * 4500;
+    cust.timer = setTimeout(function() { scLeave(cust); }, sitMs);
+  } else {
+    scLeave(cust);
+  }
+}
+
+function scLeave(cust) {
+  if (!cust.el || !cust.el.parentNode) return;
+  if (cust.tableIdx >= 0) { sceneTablTaken[cust.tableIdx] = false; cust.tableIdx = -1; }
+  cust.stage = 'leaving';
+  cust.el.className = 'scene-cust cust-leaving';
+  cust.el.style.left = SC_EXIT.l + '%';
+  cust.el.style.top  = SC_EXIT.t + '%';
+  cust.timer = setTimeout(function() { removeSceneCust(cust); }, 700);
+}
+
+function removeSceneCust(cust) {
+  if (cust.timer) { clearTimeout(cust.timer); cust.timer = null; }
+  if (cust.tableIdx >= 0) { sceneTablTaken[cust.tableIdx] = false; cust.tableIdx = -1; }
+  if (cust.el && cust.el.parentNode) cust.el.parentNode.removeChild(cust.el);
+  sceneCustomers = sceneCustomers.filter(function(c) { return c.id !== cust.id; });
+}
+
+function updateSceneOverlay(ct, earned, isVIP) {
+  var el = document.getElementById('cs-status');
+  if (!el) return;
+  var txt = (isVIP ? '\u2b50 VIP' : ct.type) + ' \u00b7 ' + fmtFull(earned);
+  el.textContent = txt;
+  setTimeout(function() { if (el.textContent === txt) el.textContent = ''; }, 2800);
+}
+
+function updateSceneLocation() {
+  var badge = document.getElementById('cs-mult-badge');
+  if (badge) {
+    var mult = state.prestigeMultiplier || 1;
+    if (mult > 1) {
+      badge.textContent = 'x' + mult.toFixed(1) + ' income';
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+  var bEl = document.getElementById('cs-barista');
+  if (bEl) {
+    var totalStaff = 0;
+    Object.keys(state.staff).forEach(function(k) { totalStaff += (state.staff[k] || 0); });
+    bEl.textContent = totalStaff >= 6 ? '\ud83d\udc68\u200d\ud83c\udf73\ud83d\udc69\u200d\ud83c\udf73' : '\ud83d\udc68\u200d\ud83c\udf73';
+  }
+  var statusEl = document.getElementById('cs-status');
+  if (statusEl && !statusEl.textContent) {
+    var loc = LOCATIONS[state.rank] || LOCATIONS[0];
+    statusEl.textContent = loc.place + ' \u00b7 ' + loc.spot;
+  }
+}
+
+function schedulePassiveSceneCustomer() {
+  if (scenePassiveTimer) clearTimeout(scenePassiveTimer);
+  var dps = state.dollarsPerSecond || 0;
+  var delay = dps > 0 ? Math.max(2200, 10000 - dps * 8) : 6000;
+  if (delay > 10000) delay = 10000;
+
+  scenePassiveTimer = setTimeout(function() {
+    if ((state.dollarsPerSecond || 0) > 0 && sceneCustomers.length < MAX_SCENE_CUSTS) {
+      spawnSceneCustomer(weightedPick(CUSTOMER_TYPES), false);
+    }
+    schedulePassiveSceneCustomer();
+  }, delay);
+}
+
+// ============================================================
+// BEST BUY INDICATOR — v1.2
+// ============================================================
+
+function updateBestBuy() {
+  var card = document.getElementById('best-buy-card');
+  var content = document.getElementById('best-buy-content');
+  if (!card || !content) return;
+
+  var bestAffordable = null;
+  var bestAffordableP = Infinity;
+  var cheapestAll = null;
+  var cheapestAllP = Infinity;
+
+  function checkItem(emoji, name, price) {
+    if (price <= state.dollars && price < bestAffordableP) {
+      bestAffordableP = price;
+      bestAffordable = { emoji: emoji, name: name, price: price };
+    }
+    if (price < cheapestAllP) {
+      cheapestAllP = price;
+      cheapestAll = { emoji: emoji, name: name, price: price };
+    }
+  }
+
+  UPGRADE_DEFS.forEach(function(def) {
+    if (def.unlockRank > state.rank) return;
+    var lvl = state.upgrades[def.id] ? state.upgrades[def.id].level : 0;
+    if (lvl >= def.maxLevel) return;
+    checkItem(def.emoji, def.name, getUpgradePrice(def, lvl));
+  });
+  STAFF_DEFS.forEach(function(def) {
+    if (def.unlockRank > state.rank) return;
+    checkItem(def.emoji, def.name, getStaffCost(def));
+  });
+  MENU_DEFS.forEach(function(def) {
+    if (def.unlockRank > state.rank) return;
+    var item = state.menu[def.id];
+    if (item && item.unlocked) return;
+    checkItem(def.emoji, def.name, def.price);
+  });
+
+  var show = bestAffordable || cheapestAll;
+  if (!show) { card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+
+  if (bestAffordable) {
+    content.innerHTML =
+      '<span class="bb-emoji">' + bestAffordable.emoji + '</span>' +
+      '<span class="bb-name">' + bestAffordable.name + '</span>' +
+      '<span class="bb-price">Buy Now \u2014 ' + fmtFull(bestAffordable.price) + '</span>';
+  } else {
+    var need = cheapestAll.price - state.dollars;
+    content.innerHTML =
+      '<span class="bb-emoji">' + cheapestAll.emoji + '</span>' +
+      '<span class="bb-name">' + cheapestAll.name + '</span>' +
+      '<span class="bb-price bb-save">Need ' + fmtFull(need) + ' more</span>';
+  }
 }
 
 // ============================================================
@@ -940,6 +1158,8 @@ function updateDisplay() {
   }
 
   checkRankEligibility();
+  updateBestBuy();
+  updateSceneLocation();
 
   var activePanel = document.querySelector('.tab-panel.active');
   if (activePanel) {
@@ -1163,6 +1383,8 @@ function init() {
   autoSaveInterval = setInterval(saveGame, 30000);
 
   scheduleNextEvent();
+  updateSceneLocation();
+  schedulePassiveSceneCustomer();
 }
 
 document.addEventListener('DOMContentLoaded', init);
