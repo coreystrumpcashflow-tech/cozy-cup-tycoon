@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cozy Cup Tycoon v1.0</title>
+  <title>Cozy Cup Tycoon v1.2</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
       <div id="income-display">$0/sec · $1/click</div>
     </div>
     <div id="header-right">
-      <span id="version-tag">v1.1</span>
+      <span id="version-tag">v1.2</span>
       <button id="save-btn" class="header-btn">💾 Save</button>
     </div>
   </header>
@@ -55,7 +55,7 @@
           </div>
 
           <!-- COUNTER / REGISTER VIEW -->
-          <div id="counter-view" class="card counter-view counter-idle scene-cart">
+          <div id="counter-view" class="card counter-view counter-idle scene-cart hidden">
             <div class="counter-location-bar">
               <span id="counter-loc-scene">🛒</span>
               <span id="counter-loc-name">Small Cart · Oak &amp; Main St</span>
@@ -68,6 +68,30 @@
                 <div id="counter-cust-desc" class="counter-cust-desc">A folding table, a hot plate, and a dream.</div>
                 <div id="counter-cust-earned" class="counter-cust-earned"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- CAFÉ SCENE v1.2 -->
+          <div id="cafe-scene" class="card cafe-scene">
+            <div class="cs-door">🚪</div>
+            <div class="cs-chalkboard">
+              <div class="cs-chalk-title">Menu</div>
+              <div class="cs-chalk-item">☕ Coffee</div>
+              <div class="cs-chalk-item">🥛 Latte</div>
+            </div>
+            <div class="cs-counter">
+              <span class="cs-register">🖥️</span>
+              <span id="cs-barista" class="cs-barista">👨‍🍳</span>
+            </div>
+            <div class="cs-table" id="cs-table-0"></div>
+            <div class="cs-table" id="cs-table-1"></div>
+            <div class="cs-table" id="cs-table-2"></div>
+            <div class="cs-table" id="cs-table-3"></div>
+            <div class="cs-ambient-glow"></div>
+            <div id="cs-customers"></div>
+            <div class="cs-scene-overlay">
+              <span id="cs-status"></span>
+              <span id="cs-mult-badge" class="hidden"></span>
             </div>
           </div>
 
@@ -99,6 +123,13 @@
               <div id="goal-progress" class="progress-bar" style="width:0%"></div>
             </div>
             <div id="goal-pct">0%</div>
+          </div>
+
+
+          <!-- BEST BUY HINT -->
+          <div id="best-buy-card" class="card best-buy-card hidden">
+            <div class="card-label">Recommended</div>
+            <div id="best-buy-content" class="best-buy-row"></div>
           </div>
 
           <!-- STORE BUY BANNER -->
