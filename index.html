@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cozy Cup Tycoon v1.0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="game-header">
+    <div id="header-left">
+      <div id="game-title">☕ Cozy Cup Tycoon</div>
+      <div id="rank-badge">Small Cart</div>
+    </div>
+    <div id="header-center">
+      <div id="dollars-display">$0</div>
+      <div id="income-display">$0/sec · $1/click</div>
+    </div>
+    <div id="header-right">
+      <span id="version-tag">v1.1</span>
+      <button id="save-btn" class="header-btn">💾 Save</button>
+    </div>
+  </header>
+
+  <!-- TAB NAVIGATION -->
+  <nav id="tab-nav">
+    <button class="tab-btn active" data-tab="cafe">☕ Café</button>
+    <button class="tab-btn" data-tab="upgrades">⚡ Upgrades</button>
+    <button class="tab-btn" data-tab="staff">👥 Staff</button>
+    <button class="tab-btn" data-tab="menu">📋 Menu</button>
+    <button class="tab-btn" data-tab="achievements">🏆 Achievements</button>
+    <button class="tab-btn" data-tab="stats">📊 Stats</button>
+    <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="game-content">
+
+    <!-- CAFÉ TAB -->
+    <section id="tab-cafe" class="tab-panel active">
+      <div class="cafe-layout">
+
+        <div class="cafe-left">
+
+          <!-- EVENT BANNER -->
+          <div id="event-banner" class="event-banner hidden">
+            <span id="event-emoji"></span>
+            <div id="event-info">
+              <div id="event-name"></div>
+              <div id="event-desc"></div>
+            </div>
+            <div id="event-timer"></div>
+          </div>
+
+          <!-- COUNTER / REGISTER VIEW -->
+          <div id="counter-view" class="card counter-view counter-idle scene-cart">
+            <div class="counter-location-bar">
+              <span id="counter-loc-scene">🛒</span>
+              <span id="counter-loc-name">Small Cart · Oak &amp; Main St</span>
+              <span id="counter-multiplier" class="hidden">×1.0 multiplier</span>
+            </div>
+            <div class="counter-scene-area">
+              <div id="counter-cust-emoji" class="counter-cust-emoji">🛒</div>
+              <div class="counter-cust-details">
+                <div id="counter-cust-name" class="counter-cust-name">Waiting for next customer...</div>
+                <div id="counter-cust-desc" class="counter-cust-desc">A folding table, a hot plate, and a dream.</div>
+                <div id="counter-cust-earned" class="counter-cust-earned"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SERVE BUTTON -->
+          <div id="serve-area">
+            <button id="serve-btn">
+              <span id="serve-emoji">☕</span>
+              <span id="serve-label">Serve Customer</span>
+            </button>
+            <div id="click-feedback"></div>
+          </div>
+
+          <!-- COMBO -->
+          <div id="combo-display" class="hidden">
+            <span id="combo-count">0x</span> Combo!
+          </div>
+
+          <!-- MANAGER MESSAGE -->
+          <div class="card">
+            <div class="card-label">Manager Note</div>
+            <div id="manager-text">You've got a cart, a dream, and enough coffee to start.</div>
+          </div>
+
+          <!-- NEXT GOAL -->
+          <div class="card">
+            <div class="card-label">Next Goal</div>
+            <div id="goal-text">Earn $2,500 to unlock Corner Café</div>
+            <div class="progress-bar-wrap">
+              <div id="goal-progress" class="progress-bar" style="width:0%"></div>
+            </div>
+            <div id="goal-pct">0%</div>
+          </div>
+
+          <!-- STORE BUY BANNER -->
+          <div id="store-buy-banner" class="card store-buy-banner hidden">
+            <div class="store-buy-header">
+              <span>📍</span>
+              <div>
+                <div id="store-buy-name" class="store-buy-name">Corner Café</div>
+                <div class="store-buy-sub">Next location ready to open</div>
+              </div>
+            </div>
+            <div class="store-buy-note">Upgrades, staff, and menu reset at the new location. You keep your balance (minus the cost) and earn a permanent income boost.</div>
+            <button id="store-buy-btn" class="btn-primary store-buy-btn" onclick="buyNextStore()">Open Corner Café</button>
+          </div>
+
+        </div>
+
+        <div class="cafe-right">
+
+          <!-- CUSTOMER FEED -->
+          <div class="card feed-card">
+            <div class="card-label">Recent Customers</div>
+            <div id="customer-feed"></div>
+          </div>
+
+          <!-- BUSINESS JOURNAL -->
+          <div class="card feed-card journal-card">
+            <div class="card-label">Business Journal</div>
+            <div id="journal-feed"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- UPGRADES TAB -->
+    <section id="tab-upgrades" class="tab-panel">
+      <div class="tab-header">
+        <h2>Upgrades</h2>
+        <p>Improve your café. Prices scale with each purchase. New upgrades unlock as you grow.</p>
+      </div>
+      <div id="upgrades-list" class="card-grid"></div>
+    </section>
+
+    <!-- STAFF TAB -->
+    <section id="tab-staff" class="tab-panel">
+      <div class="tab-header">
+        <h2>Café Crew</h2>
+        <p>Hire staff to generate income automatically. Each hire costs more than the last.</p>
+      </div>
+      <div id="staff-list" class="card-grid"></div>
+    </section>
+
+    <!-- MENU TAB -->
+    <section id="tab-menu" class="tab-panel">
+      <div class="tab-header">
+        <h2>Menu</h2>
+        <p>New items unlock as you reach higher ranks. Upgrade each item to boost income.</p>
+      </div>
+      <div id="menu-list" class="card-grid"></div>
+    </section>
+
+    <!-- ACHIEVEMENTS TAB -->
+    <section id="tab-achievements" class="tab-panel">
+      <div class="tab-header">
+        <h2>Achievements</h2>
+        <div id="achievement-count" class="tab-sub">0 / 15 unlocked</div>
+      </div>
+      <div id="achievements-list" class="card-grid"></div>
+    </section>
+
+    <!-- STATS TAB -->
+    <section id="tab-stats" class="tab-panel">
+      <div class="tab-header">
+        <h2>Stats</h2>
+      </div>
+      <div id="stats-content" class="stats-grid"></div>
+    </section>
+
+    <!-- SETTINGS TAB -->
+    <section id="tab-settings" class="tab-panel">
+      <div class="tab-header">
+        <h2>Settings</h2>
+      </div>
+
+      <div class="settings-section card">
+        <h3>Save</h3>
+        <button id="manual-save-btn" class="btn-primary">💾 Manual Save</button>
+        <div id="last-save-text" class="muted-text">Not saved yet this session.</div>
+        <!-- v2: Add import/export save to file -->
+      </div>
+
+      <!-- BRAND LEGACY (v2 prestige stub) -->
+      <div class="settings-section card">
+        <h3>Brand Legacy <span class="coming-soon">Coming v2.0</span></h3>
+        <div class="locked-section">
+          <span class="lock-icon">🔒</span>
+          <div>
+            <div class="locked-title">Prestige System</div>
+            <div class="locked-desc">Reset your café and carry permanent brand multipliers into a stronger rebuild. Legacy upgrades, brand perks, and dynasty bonuses unlock here.</div>
+          </div>
+        </div>
+        <!-- v2: Brand Legacy prestige — reset with permanent multipliers, unlock legacy upgrades, brand story progression -->
+      </div>
+
+      <!-- FEEDBACK -->
+      <div class="settings-section card">
+        <h3>Feedback / Bugs</h3>
+        <div class="feedback-block">
+          <p>After playing, report:</p>
+          <ul>
+            <li>Any button or tab that doesn't work</li>
+            <li>Money or income showing wrong numbers</li>
+            <li>Save not loading after refresh</li>
+            <li>Upgrades or achievements not triggering</li>
+            <li>Balance feedback — too slow, too fast, boring stretch</li>
+            <li>Anything that feels broken or off</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DANGER ZONE: RESET -->
+      <div class="settings-section card danger-zone">
+        <h3>Reset Game</h3>
+        <p class="muted-text">This will permanently delete all progress. There is no undo. Type RESET to confirm.</p>
+        <div id="reset-area">
+          <input type="text" id="reset-input" placeholder="Type RESET to confirm" maxlength="5" autocomplete="off">
+          <button id="reset-btn" class="btn-danger">Reset All Progress</button>
+        </div>
+        <div id="reset-msg" class="muted-text"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- POPUP MODAL -->
+  <div id="popup-overlay" class="hidden">
+    <div id="popup-box">
+      <div id="popup-emoji"></div>
+      <div id="popup-title"></div>
+      <div id="popup-body"></div>
+      <button id="popup-close" class="btn-primary">Keep Going</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
